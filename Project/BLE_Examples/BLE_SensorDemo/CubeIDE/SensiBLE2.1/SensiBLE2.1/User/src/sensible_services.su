@@ -1,0 +1,17 @@
+sensible_services.c:999:12:Term_Update	40	static
+sensible_services.c:404:6:AudioProcess	24	static
+sensible_services.c:419:6:MicLevelUpdate	32	static
+sensible_services.c:467:12:Add_Console_Service	72	static
+sensible_services.c:534:12:Add_Environmental_Sensor_Service	64	static
+sensible_services.c:655:12:Add_HW_SW_ServW2ST_Service	64	static
+sensible_services.c:716:6:BatUpdate	64	static
+sensible_services.c:758:6:LedUpdate	32	static
+sensible_services.c:212:6:aci_att_read_resp_event	8	static
+sensible_services.c:786:12:CoLuxUpdate	32	static
+sensible_services.c:802:12:AccEvent_Notify	32	static
+sensible_services.c:226:6:aci_gatt_read_permit_req_event	40	static
+sensible_services.c:832:12:Config_Notify	48	static
+sensible_services.c:256:6:sensible_aci_gatt_attribute_modified_event	96	static,ignoring_inline_asm
+sensible_services.c:857:12:ECompass_Update	32	static
+sensible_services.c:876:12:EnvironmentalUpdate	64	static
+sensible_services.c:445:6:UpdateAll	24	static

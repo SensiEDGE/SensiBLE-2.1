@@ -1,0 +1,8 @@
+inertial_app.c:122:21:INERTIAL_APP_add_char	32	static
+inertial_app.c:142:21:INERTIAL_APP_Init	16	static
+inertial_app.c:161:21:INERTIAL_APP_Disable	16	static
+inertial_app.c:179:6:MFT_Configuration	32	static
+inertial_app.c:207:6:MFT_Disable	8	static
+inertial_app.c:220:6:INERTIAL_StartTimer	8	static
+inertial_app.c:232:6:INERTIAL_StopTimer	8	static
+inertial_app.c:242:21:INERTIAL_APP_DataUpdate	88	static

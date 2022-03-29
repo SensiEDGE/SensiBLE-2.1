@@ -1,0 +1,5 @@
+bluevoice_app.c:114:15:BV_APP_add_char	72	static
+bluevoice_app.c:142:15:BV_APP_profile_init	16	static
+bluevoice_app.c:171:6:BV_APP_StartStop_ctrl	8	static
+bluevoice_app.c:190:6:BSP_AUDIO_IN_AudioProcess	8	static
+bluevoice_app.c:213:6:BV_APP_DataUpdate	16	static

@@ -1,0 +1,14 @@
+*.bak
+*.cfg
+*.dep
+*.ewt
+*.launch
+.settings
+Debug
+Exe
+List
+Obj
+Release
+settings
+Project/BLE_Examples/BLE_SensorDemo/CubeIDE/SensiBLE2.0/SensiBLE2.0/
+Project/BLE_Examples/BLE_SensorDemo/CubeIDE/SensiBLE2.0/SensiBLE2.1/

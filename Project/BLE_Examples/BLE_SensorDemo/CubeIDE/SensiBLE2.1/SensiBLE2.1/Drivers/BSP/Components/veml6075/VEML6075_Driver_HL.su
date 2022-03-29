@@ -1,0 +1,10 @@
+VEML6075_Driver_HL.c:320:25:VEML6075_Write_Reg	16	static
+VEML6075_Driver_HL.c:301:25:VEML6075_Read_Reg	8	static
+VEML6075_Driver_HL.c:176:25:VEML6075_Get_Uv	8	static
+VEML6075_Driver_HL.c:275:25:VEML6075_Check_WhoAmI	16	static
+VEML6075_Driver_HL.c:163:25:VEML6075_U_Check_WhoAmI	8	static
+VEML6075_Driver_HL.c:238:25:VEML6075_Sensor_Disable	8	static
+VEML6075_Driver_HL.c:123:25:VEML6075_U_DeInit	8	static
+VEML6075_Driver_HL.c:220:25:VEML6075_Sensor_Enable	8	static
+VEML6075_Driver_HL.c:196:25:VEML6075_Init	8	static
+VEML6075_Driver_HL.c:151:25:VEML6075_U_Get_WhoAmI	8	static

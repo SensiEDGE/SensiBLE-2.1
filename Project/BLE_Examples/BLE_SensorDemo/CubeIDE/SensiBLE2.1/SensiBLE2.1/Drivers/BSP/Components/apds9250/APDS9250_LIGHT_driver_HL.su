@@ -1,0 +1,13 @@
+APDS9250_LIGHT_driver_HL.c:97:25:APDS9250_Init	0	static
+APDS9250_LIGHT_driver_HL.c:107:25:APDS9250_Sensor_Enable	0	static
+APDS9250_LIGHT_driver_HL.c:113:25:APDS9250_Sensor_Disable	0	static
+APDS9250_LIGHT_driver_HL.c:173:25:APDS9250_Get_Light	8	static
+APDS9250_LIGHT_driver_HL.c:165:25:APDS9250_Get_Red	8	static
+APDS9250_LIGHT_driver_HL.c:157:25:APDS9250_Get_Blue	8	static
+APDS9250_LIGHT_driver_HL.c:149:25:APDS9250_Get_Grn	8	static
+APDS9250_LIGHT_driver_HL.c:141:25:APDS9250_Get_Ir	8	static
+APDS9250_LIGHT_driver_HL.c:119:25:APDS9250_Get_WhoAmI	8	static
+APDS9250_LIGHT_driver_HL.c:127:25:APDS9250_Check_WhoAmI	16	static
+APDS9250_LIGHT_driver_HL.c:102:25:APDS9250_DeInit	0	static
+APDS9250_LIGHT_driver_HL.c:181:18:APDS9250_Read_Reg	8	static
+APDS9250_LIGHT_driver_HL.c:191:18:APDS9250_Write_Reg	16	static

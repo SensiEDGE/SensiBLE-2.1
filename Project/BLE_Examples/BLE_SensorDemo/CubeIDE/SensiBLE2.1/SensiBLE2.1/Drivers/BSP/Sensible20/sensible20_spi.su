@@ -1,4 +1,0 @@
-sensible20_spi.c:43:6:BlueNRG1_SPI_Init	32	static
-sensible20_spi.c:96:6:BlueNRG1_SPI_FlushRxFifo	8	static
-sensible20_spi.c:108:28:BlueNRG1_SPI_Transmit	24	static
-sensible20_spi.c:143:28:BlueNRG1_SPI_Receive	24	static

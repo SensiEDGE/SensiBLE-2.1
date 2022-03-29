@@ -1,5 +1,0 @@
-acceleroSamplesProcessing.c:63:10:getSteps	0	static
-acceleroSamplesProcessing.c:73:6:flushAcceleroFifo	40	static
-acceleroSamplesProcessing.c:89:6:lookForSteps	24	static
-acceleroSamplesProcessing.c:131:6:lookForTilt	32	static
-acceleroSamplesProcessing.c:149:6:resetSteps	0	static

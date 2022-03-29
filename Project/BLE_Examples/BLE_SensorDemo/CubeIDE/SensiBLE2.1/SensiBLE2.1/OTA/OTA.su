@@ -1,3 +1,0 @@
-OTA.c:168:13:checkCrc	296	static
-OTA.c:70:6:StartUpdateFWBlueMS	32	static
-OTA.c:103:8:UpdateFWBlueMS	32	static

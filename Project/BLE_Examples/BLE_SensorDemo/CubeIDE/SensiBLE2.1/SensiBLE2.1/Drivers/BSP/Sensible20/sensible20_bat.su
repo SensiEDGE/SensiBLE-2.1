@@ -1,4 +1,0 @@
-sensible20_bat.c:55:6:BSP_BatLevel_Pin_Init	16	static
-sensible20_bat.c:75:6:BSP_BatLevel_IN_DeInit	8	static
-sensible20_bat.c:92:6:BSP_BatLevel_IN_Init	16	static
-sensible20_bat.c:129:6:BSP_BatLevel_GetValues	32	static

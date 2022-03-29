@@ -1,3 +1,0 @@
-sensible20_steps.c:292:16:countSteps.constprop	20	static
-sensible20_steps.c:169:13:transferToThreeStates.constprop	32	static
-sensible20_steps.c:97:9:ProcessSteps	56	static

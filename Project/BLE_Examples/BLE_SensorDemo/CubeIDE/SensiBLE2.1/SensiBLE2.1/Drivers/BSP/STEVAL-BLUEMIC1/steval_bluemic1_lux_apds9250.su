@@ -1,7 +1,0 @@
-steval_bluemic1_lux_apds9250.c:192:26:APDS9250_IO_Write.constprop	8	static
-steval_bluemic1_lux_apds9250.c:80:19:BSP_LUX_Init	24	static
-steval_bluemic1_lux_apds9250.c:109:9:BSP_LUX_IsInitalized	0	static
-steval_bluemic1_lux_apds9250.c:115:19:BSP_LUX_PowerON	16	static
-steval_bluemic1_lux_apds9250.c:123:19:BSP_LUX_PowerOFF	16	static
-steval_bluemic1_lux_apds9250.c:130:9:BSP_LUX_IsDataReady	16	static
-steval_bluemic1_lux_apds9250.c:145:19:BSP_LUX_GetValue	24	static

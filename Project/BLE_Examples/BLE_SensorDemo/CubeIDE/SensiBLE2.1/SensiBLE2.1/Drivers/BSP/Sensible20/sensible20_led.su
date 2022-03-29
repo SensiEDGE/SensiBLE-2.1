@@ -1,6 +1,0 @@
-sensible20_led.c:58:6:SENSI_LedOn	8	static
-sensible20_led.c:63:6:SENSI_LedOff	8	static
-sensible20_led.c:40:6:SENSI_LedInit	16	static
-sensible20_led.c:68:6:SENSI_LedToggle	8	static
-sensible20_led.c:73:6:SENSI_LedSetState	8	static
-sensible20_led.c:82:18:SENSI_LedGetState	8	static

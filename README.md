@@ -1,6 +1,6 @@
 # **SensiBLE-2.1**
 
-## <b>Key features:</b>
+## <b>Key features</b>
 * Dimension 17 x 43 x 9 mm
 * Bluetooth v5.0 Bluetooth Low Energy 2.4GHz
 * BLE Chipset ST BlueNRG-1
@@ -23,10 +23,10 @@
 For build [STM32CubeIDE 1.3.0](https://www.st.com/en/development-tools/stm32cubeide.html#:~:text=STM32CubeIDE%20is%20an%20advanced%20C,and%20GDB%20for%20the%20debugging.) is used.
 
 ## Bootloader
-SensiBLE-2.1 uses bootloader [Bootloader.bin](binary/Bootloader.bin)
+SensiBLE-2.1 uses bootloader [Bootloader.bin](binary/Bootloader.bin).
 
 ## Firmware
-In the latest firmware version (SensiBLE-2.1-revC2-SW-OTA) redesigned accelerometer event logic and fixed problems with the VEML6075 sensor driver
+In the latest firmware version (SensiBLE-2.1-revC2-SW-OTA) redesigned accelerometer event logic and fixed problems with the VEML6075 sensor driver.
 
 - [SensiBLE-2.1-revC2-SW-OTA.bin](binary/SensiBLE-2.1-revC2-SW-OTA.bin) - firmware for downloading over BLE with "[ST BLE Sensor](https://www.st.com/en/embedded-software/stblesensor.html)".
 - [SensiBLE-2.1-revC2-SW-OTA-BT.bin](binary/SensiBLE-2.1-revC2-SW-OTA-BT.bin) - firmware for downloading with "[BlueNRG-1 ST-Link Utility](https://www.st.com/en/embedded-software/stsw-bnrg1stlink.html)"

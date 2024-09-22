@@ -63,7 +63,7 @@ void EnableSWPedometer(void)
     
     W2ST_ON_HW_FEATURE(W2ST_HWF_PEDOMETER);
     
-    AccEvent_Notify(GetStepSWPedometer(), 3);
+    AccEventSteps_Notifi(GetStepSWPedometer());
 
 fail: return;
 }
@@ -155,7 +155,9 @@ void EnableHWOrientation6D(void)
     }
 
     AccEventType orientation = GetHWOrientation6D();
-    AccEvent_Notify(orientation, 2);
+    AccEventSteps_Notify(orientation, GetStepSWPedometer());
+    //Only for ST BLE Sensor Classic
+	AccEvent_Notifi(orientation);
 }
 
 /**
@@ -387,7 +389,7 @@ static void processAccEvents(void)
     {
         /* Check if the Free Fall interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_FF_IA){
-            AccEvent_Notify(ACC_FREE_FALL, 2);
+        	AccEventSteps_Notify(ACC_FREE_FALL, GetStepSWPedometer());
         }
     }
     
@@ -396,7 +398,7 @@ static void processAccEvents(void)
     {
         /* Check if the Double Tap interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_DOUBLE_TAP){
-            AccEvent_Notify(ACC_DOUBLE_TAP, 2);
+        	AccEventSteps_Notify(ACC_DOUBLE_TAP, GetStepSWPedometer());
         }
     }
     
@@ -405,7 +407,7 @@ static void processAccEvents(void)
     {
         /* Check if the Single Tap interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_SINGLE_TAP){
-            AccEvent_Notify(ACC_SINGLE_TAP, 2);
+        	AccEventSteps_Notify(ACC_SINGLE_TAP, GetStepSWPedometer());
         }
     }
     
@@ -415,14 +417,16 @@ static void processAccEvents(void)
         /* Check if the 6D Orientation interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_6D_IA){
             AccEventType orientation = GetHWOrientation6D();
-            AccEvent_Notify(orientation, 2);
+            AccEventSteps_Notify(orientation, GetStepSWPedometer());
+			//Only for ST BLE Sensor Classic
+            AccEvent_Notifi(orientation);
         }
     }
 
     if(W2ST_CHECK_HW_FEATURE(W2ST_HWF_WAKE_UP)) {
         /* Check if the Wake Up interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_WU_IA){
-            AccEvent_Notify(ACC_WAKE_UP, 2);
+        	AccEventSteps_Notify(ACC_WAKE_UP, GetStepSWPedometer());
         }
     }
 }
@@ -438,7 +442,7 @@ static void processAccFifo(void)
             (W2ST_CHECK_HW_FEATURE(W2ST_HWF_MULTIPLE_EVENTS)))
         {
             if(lookForSteps()){
-                AccEvent_Notify(GetStepSWPedometer(), 3);//2);
+            	AccEventSteps_Notifi(GetStepSWPedometer());
             }
         }
         
@@ -446,7 +450,7 @@ static void processAccFifo(void)
             (W2ST_CHECK_HW_FEATURE(W2ST_HWF_MULTIPLE_EVENTS)))
         {
             if(lookForTilt()){
-                AccEvent_Notify(ACC_TILT, 2);
+            	AccEventSteps_Notify(ACC_TILT, GetStepSWPedometer());
             }
         }
     }

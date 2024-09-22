@@ -96,10 +96,7 @@ static volatile BOOL accMagIntOccurred = FALSE;
 uint32_t FirstConnectionConfig = 0;
 
 /* Private function prototypes -----------------------------------------------*/
-void Error_Handler(void);
-
 void setAccMagIntOccurred(BOOL status);
-
 void InitGPIO(void);
 void InertialDisable(void);
 void InertialEnable(void);
@@ -414,7 +411,7 @@ void InertialEnable(void)
     /* Inertial sensors Initialization */
     INERTIAL_APP_Init();
     
-    SensorsEnableMag();
+//    SensorsEnableMag();
     
     MFT_Configuration();
 }

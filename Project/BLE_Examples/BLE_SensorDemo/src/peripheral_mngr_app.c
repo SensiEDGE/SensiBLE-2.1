@@ -119,11 +119,11 @@ static uint32_t micLevelUpdateTime = 0;
 static uint32_t ledSwitchTime = 0;
 static BOOL ledActive = FALSE;// Variable used for holding LED state;
 
-/* BlueVoice service UUID*/ 
-static const uint8_t bluemic1_service_uuid[16] =
-{
-  0x1b,0xc5,0xd5,0xa5,0x02,0x00,0xb4,0x9a,0xe1,0x11,0x01,0x00,0x00,0x00,0x00,0x00
-};
+///* BlueVoice service UUID*/
+//static const uint8_t bluemic1_service_uuid[16] =
+//{
+//  0x1b,0xc5,0xd5,0xa5,0x02,0x00,0xb4,0x9a,0xe1,0x11,0x01,0x00,0x00,0x00,0x00,0x00
+//};
 
 /**
  * @}
@@ -213,31 +213,12 @@ APP_Status PER_APP_Init_BLE(void)
 
 APP_Status PER_APP_Service_Init(void)
 {
-  /* service creation */
-  tBleStatus ret = aci_gatt_add_service(UUID_TYPE_128,
-                            (Service_UUID_t *) bluemic1_service_uuid, PRIMARY_SERVICE,  10,
-                            (uint16_t*)&ServiceHandle); 
-
-  if (ret != BLE_STATUS_SUCCESS)
-  {
-    PRINTF("Error while adding aci_gatt_add_service().\n");
-    return APP_ERROR;
-  }
-  
   /* Console service and characteristics initialization. (for OTA)*/
-  ret = Add_Console_Service();
+	tBleStatus ret = Add_Console_Service();
   
   if (ret != BLE_STATUS_SUCCESS)
   {
     PRINTF("Error while adding Add_Console_Service().\n");
-    return APP_ERROR;
-  }
-
-  ret = Add_Environmental_Sensor_Service();
-
-  if (ret != BLE_STATUS_SUCCESS)
-  {
-    PRINTF("Error while adding Add_Environmental_Sensor_Service().\n");
     return APP_ERROR;
   }
 
@@ -248,25 +229,8 @@ APP_Status PER_APP_Service_Init(void)
     PRINTF("Error while adding Add_HW_SW_ServW2ST_Service().\n");
     return APP_ERROR;
   }
-  
-  /* BlueVoice characteristics creation */  
-  BV_APP_Status BV_status = BV_APP_add_char(ServiceHandle);
-  
-  if(BV_status != BV_APP_SUCCESS)
-  {
-    PRINTF("Error while adding BV_APP_add_char(ServiceHandle).\n");
-    return APP_ERROR;
-  }
-  
-  /* Inertial characteristics creation */  
-  INERTIAL_APP_Status IN_status = INERTIAL_APP_add_char(ServiceHandle);
-  
-  if(IN_status != INERTIAL_APP_SUCCESS)
-  {
-    PRINTF("Error while adding char INERTIAL_APP_add_char(ServiceHandle).\n");
-    return APP_ERROR;
-  }
-  
+
+  ServiceHandle = GetHWServW2STHandle();
   return APP_SUCCESS;
 }
 

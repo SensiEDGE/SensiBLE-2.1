@@ -274,7 +274,6 @@ static DrvStatusTypeDef VEML6075_Get_WhoAmI( DrvContextTypeDef *handle, uint8_t 
  */
 static DrvStatusTypeDef VEML6075_Check_WhoAmI( DrvContextTypeDef *handle )
 {
-	static DrvStatusTypeDef test = COMPONENT_ERROR;
   uint16_t who_am_i = 0x00;
 
   if (VEML6075_Get_WhoAmI(handle, (uint8_t*)&who_am_i ) == COMPONENT_ERROR)

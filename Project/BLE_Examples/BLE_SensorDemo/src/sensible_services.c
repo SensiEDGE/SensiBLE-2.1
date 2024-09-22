@@ -24,19 +24,17 @@ volatile BOOL ForceReCalibration = FALSE;
 extern volatile uint8_t audio_streaming_active;
 
 /* Local symbols -------------------------------------------------------------*/
-static uint16_t EnvServHandle;
+//static uint16_t EnvServHandle;
 
 static uint16_t consoleHandle = 0;
 static uint16_t termCharHandle = 0;
 static uint16_t stdErrCharHandle = 0;
-
 // static Service_UUID_t service_uuid;
 static uint16_t EnvironmentalCharSize;
 static uint16_t EnvironmentalCharHandle;
 static uint16_t LedCharHandle;
 //static uint16_t LuxCharHandle;
 static uint16_t Co_LuxCharHandle;
-static uint16_t SwitchCharHandle;
 static uint16_t VbatHandle;
 static uint16_t AudioLevelCharHandle;
 
@@ -44,6 +42,7 @@ static uint16_t ConfigServW2STHandle;
 static uint16_t ConfigCharHandle;
 
 static uint16_t HWServW2STHandle;
+//statis uint1
 static uint16_t AccEventCharHandle;
 static uint16_t ECompassCharHandle;
 
@@ -63,6 +62,13 @@ static uint32_t bytesToWrite = 0;
 static uint8_t BufferToWrite[256];
 static uint32_t ConnectionBleStatus;
 
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
 #ifdef SENSIBLE_2_0
 #define MCU_TYPE                "BlueNRG_1"
 #define PACKAGE_NAME            "SensiBLE-2.0"
@@ -70,7 +76,7 @@ static uint32_t ConnectionBleStatus;
 #elif defined SENSIBLE_2_1
 #define MCU_TYPE                "BlueNRG_2"
 #define PACKAGE_NAME            "SensiBLE-2.1"
-#define VERSION                 '3','1','1'
+#define VERSION                 '3','1','2'
 #else
 #error "SENSIBLE_2_0 or SENSIBLE_2_1 must be defined!"
 #endif
@@ -91,11 +97,9 @@ do {\
 }while(0)
 
 /* Console Service */
-#define COPY_CONSOLE_SERVICE_UUID(uuid_struct)   COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,  0x00,0x0E,  0x11,0xe1,  0x9a,0xb4,  0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-#define COPY_TERM_CHAR_UUID(uuid_struct)         COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x01,  0x00,0x0E,  0x11,0xe1,  0xac,0x36,  0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-#define COPY_STDERR_CHAR_UUID(uuid_struct)       COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x02,  0x00,0x0E,  0x11,0xe1,  0xac,0x36,  0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-
-#define COPY_ENV_SENS_SERVICE_UUID(uuid_struct)  COPY_UUID_128(uuid_struct,0x42,0x82,0x1a,0x40, 0xe4,0x77, 0x11,0xe2, 0x82,0xd0, 0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+#define COPY_CONSOLE_SERVICE_UUID(uuid_struct)         COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,  0x00,0x0E,  0x11,0xe1,  0x9a,0xb4,  0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+#define COPY_TERM_CHAR_UUID(uuid_struct)               COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x01,  0x00,0x0E,  0x11,0xe1,  0xac,0x36,  0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+#define COPY_STDERR_CHAR_UUID(uuid_struct)             COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x02,  0x00,0x0E,  0x11,0xe1,  0xac,0x36,  0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_HW_SENS_W2ST_SERVICE_UUID(uuid_struct)    COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0x9a,0xb4,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_ECOMPASS_W2ST_CHAR_UUID(uuid_struct)      COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x40,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_ENVIRONMENTAL_W2ST_CHAR_UUID(uuid_struct) COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
@@ -107,14 +111,14 @@ do {\
 //#warning "CO sensor here"
 #define COPY_CO_LUX_W2ST_CHAR_UUID(uuid_struct)        COPY_UUID_128(uuid_struct,0x01,0x00,0x80,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 
-#define COPY_BAT_W2ST_CHAR_UUID(uuid_struct)            COPY_UUID_128(uuid_struct,0x00,0x02,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+#define COPY_BAT_W2ST_CHAR_UUID(uuid_struct)           COPY_UUID_128(uuid_struct,0x00,0x02,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 
+#define COPY_ACC_MAG_W2ST_CHAR_UUID(uuid_struct)       COPY_UUID_128(uuid_struct,0x00,0xA0,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_ACC_EVENT_W2ST_CHAR_UUID(uuid_struct)     COPY_UUID_128(uuid_struct,0x00,0x00,0x04,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 
-
 /* Configuration Service */
-#define COPY_CONFIG_SERVICE_UUID(uuid_struct)    COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,0x00,0x0F,0x11,0xe1,0x9a,0xb4,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-#define COPY_CONFIG_W2ST_CHAR_UUID(uuid_struct)  COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x02,0x00,0x0F,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+#define COPY_CONFIG_SERVICE_UUID(uuid_struct)     COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,0x00,0x0F,0x11,0xe1,0x9a,0xb4,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
+#define COPY_CONFIG_W2ST_CHAR_UUID(uuid_struct)   COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x02,0x00,0x0F,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 
 #define STORE_LE_16(buf, val)    ( ((buf)[0] =  (uint8_t) (val)    ) , \
                                    ((buf)[1] =  (uint8_t) (val>>8) ) )
@@ -206,18 +210,6 @@ static tBleStatus Term_Update_AfterRead(void);
 static tBleStatus Stderr_Update_AfterRead(void);
 static tBleStatus Term_Update(uint8_t *data, uint8_t length);
 static uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length);
-/**
- * @brief This function handles attribute read callback
- */
-void aci_att_read_resp_event(uint16_t Connection_Handle,
-                             uint8_t Event_Data_Length,
-                             uint8_t Attribute_Value[])
-{
-    if(Connection_Handle == LedCharHandle + 1){
-        /* Read Request for Led Status */
-        LedUpdate(LED1);
-    }
-}
 
 /**
  * @brief  This event is given when a read request is received 
@@ -233,9 +225,7 @@ void aci_gatt_read_permit_req_event(uint16_t Connection_Handle,
     } else if (Attribute_Handle == stdErrCharHandle + 1) {
         /* Send again the last packet for StdError */
         Stderr_Update_AfterRead();
-    }
-
-    if(Attribute_Handle == AccEventCharHandle + 1) {
+    } else if(Attribute_Handle == AccEventCharHandle + 1) {
         /* Read Request for Pedometer */
         uint16_t StepCount;
         if(W2ST_CHECK_HW_FEATURE(W2ST_HWF_PEDOMETER)) {
@@ -243,8 +233,18 @@ void aci_gatt_read_permit_req_event(uint16_t Connection_Handle,
         } else {
             StepCount = 0;
         }
-        AccEvent_Notify(StepCount, 2);
+        AccEventSteps_Notifi(StepCount);
+    } else if (Attribute_Handle == EnvironmentalCharHandle + 1) {
+    	EnvironmentalUpdate();
+    } else if(Attribute_Handle == LedCharHandle + 1){
+        /* Read Request for Led Status */
+        LedUpdate(LED1);
     }
+
+    //EXIT:
+    if(Connection_Handle != 0) {
+    	aci_gatt_allow_read(Connection_Handle);
+	}
 }
 
 
@@ -263,7 +263,7 @@ void sensible_aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
 
 
     /* ---------------------------------------------------------------------- */
-    if(Attr_Handle == SwitchCharHandle + 2) {
+    if(Attr_Handle == LedCharHandle + 2) {
     /* Switch fucntion on/off */
         if(Attr_Data[0] == 0x01) {
             /* Switch on */
@@ -349,6 +349,7 @@ void sensible_aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
         } else if(Attr_Data[0] == 0x00) {
             APP_PER_enabled.APP_CO_LUX_ENABLE = 0;
         }
+
     } else if(Attr_Handle == ConfigCharHandle + 1) {
     /* ---------------------------------------------------------------------- */
     /* Configuration received */
@@ -381,7 +382,7 @@ void sensible_aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
     /* ---------------------------------------------------------------------- */
 		if (Attr_Data[0] == 01) {
 			ResetSWPedometer();
-			Config_Notify(FEATURE_MASK_ACC_EVENTS, 'w', 1);
+			Config_Notify(FEATURE_MASK_ACC_EVENTS, 'o', 1);
 		} else if (Attr_Data[0] == 0) {
 			DisableHWMultipleEvents();
 		}
@@ -436,7 +437,7 @@ void MicLevelUpdate()
     {
         buff[2+Counter]= DBNOISE_Value_Ch[Counter]&0xFF;
     }
-    aci_gatt_update_char_value(EnvServHandle, AudioLevelCharHandle, 0, sizeof(buff), buff);
+    aci_gatt_update_char_value(HWServW2STHandle, AudioLevelCharHandle, 0, sizeof(buff), buff);
 }
 
 /**
@@ -527,21 +528,30 @@ fail:
 }
 
 /**
- * @brief  Add service and charachteristic for environmental data
- * @param  
+ * @brief  Add the HW Features service using a vendor specific profile
+ * @param  None
  * @retval tBleStatus Status
  */
-tBleStatus Add_Environmental_Sensor_Service(void)
+tBleStatus Add_HW_SW_ServW2ST_Service(void)
 {
   tBleStatus ret;
   uint8_t uuid[16];
 
-  COPY_ENV_SENS_SERVICE_UUID(uuid);
+  COPY_HW_SENS_W2ST_SERVICE_UUID(uuid);
+
+  ret = aci_gatt_add_service(UUID_TYPE_128,           //Service_UUID_Type
+							(Service_UUID_t*)uuid,    //Service_UUID
+							PRIMARY_SERVICE,          //Service_Type
+							1+3*10,                    //Max_Attribute_Records that can be added
+													  // to this service.
+													  //1 + if(read|write) + 2 for every char,
+													  //if(notify|indicate) + 3 for every char
+							&HWServW2STHandle);      //Service_Handle
+
+  if (ret != BLE_STATUS_SUCCESS){
+	  goto fail;
+  }
   
-  ret = aci_gatt_add_service(UUID_TYPE_128,  (Service_UUID_t*)uuid, PRIMARY_SERVICE, 19/*10*/, &EnvServHandle); 
-  if (ret != BLE_STATUS_SUCCESS)
-      goto fail;
-    
   /* Fill the Environmental BLE Characteristc */
   /* ************************ */
   COPY_ENVIRONMENTAL_W2ST_CHAR_UUID(uuid);
@@ -552,7 +562,7 @@ tBleStatus Add_Environmental_Sensor_Service(void)
   
   EnvironmentalCharSize = 10;// if second temperature - 12;
   
-  ret =  aci_gatt_add_char(EnvServHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, EnvironmentalCharSize,
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, EnvironmentalCharSize,
                            CHAR_PROP_NOTIFY|CHAR_PROP_READ,
                            ATTR_PERMISSION_NONE,
                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -576,7 +586,7 @@ tBleStatus Add_Environmental_Sensor_Service(void)
 #endif
   
   COPY_CO_LUX_W2ST_CHAR_UUID(uuid);
-  ret =  aci_gatt_add_char(EnvServHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2+4,
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2+4,
                            CHAR_PROP_NOTIFY|CHAR_PROP_READ,
                            ATTR_PERMISSION_NONE,
                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -587,7 +597,7 @@ tBleStatus Add_Environmental_Sensor_Service(void)
   }
   /* ************************ */
   COPY_LED_W2ST_CHAR_UUID(uuid);
-  ret =  aci_gatt_add_char(EnvServHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+1,
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+1,
                            CHAR_PROP_NOTIFY | CHAR_PROP_READ,
                            ATTR_PERMISSION_NONE,
                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -598,7 +608,7 @@ tBleStatus Add_Environmental_Sensor_Service(void)
   }
   /* ************************ */
   COPY_BAT_W2ST_CHAR_UUID(uuid);
-  ret =  aci_gatt_add_char(EnvServHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2+2+2+1,
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2+2+2+1,
                            CHAR_PROP_NOTIFY | CHAR_PROP_READ,
                            ATTR_PERMISSION_NONE,
                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -610,7 +620,7 @@ tBleStatus Add_Environmental_Sensor_Service(void)
   /* ************************ */
   /* Mic level characteristic */
   COPY_MIC_W2ST_CHAR_UUID(uuid);
-  ret =  aci_gatt_add_char(EnvServHandle, UUID_TYPE_128, (Char_UUID_t*)uuid,2+AUDIO_CHANNELS,
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid,2+AUDIO_CHANNELS,
                            CHAR_PROP_NOTIFY,
                            ATTR_PERMISSION_NONE,
                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -620,6 +630,55 @@ tBleStatus Add_Environmental_Sensor_Service(void)
     goto fail;
   }
   
+  COPY_ACC_EVENT_W2ST_CHAR_UUID(uuid);
+  ret =  aci_gatt_add_char(HWServW2STHandle,          //Service_Handle
+							UUID_TYPE_128,              //UUID type
+							(Char_UUID_t*)uuid,         //Char_UUID_t
+							2+3,                        //Maximum length of the characteristic value
+							CHAR_PROP_NOTIFY |
+							CHAR_PROP_READ,             //Char_Properties
+							ATTR_PERMISSION_NONE,       //Security permission flags
+							GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,//event mask
+							16,                         //Enc_Key_Size
+							1,                          //Is_Variable length, 0 - Fixed length, 1 - Variable length
+							&AccEventCharHandle);       //Char_Handle
+
+  if (ret != BLE_STATUS_SUCCESS){
+	  goto fail;
+  }
+
+  COPY_ECOMPASS_W2ST_CHAR_UUID(uuid);
+  ret =  aci_gatt_add_char(HWServW2STHandle,          //Service_Handle
+							UUID_TYPE_128,              //UUID type
+							(Char_UUID_t*)uuid,         //Char_UUID_t
+							2+2,                        //Maximum length of the characteristic value
+							CHAR_PROP_NOTIFY,           //Char_Properties
+							ATTR_PERMISSION_NONE,       //Security permission flags
+							GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,//event mask
+							16,                         //Enc_Key_Size
+							0,                          //Is_Variable length, 0 - Fixed length, 1 - Variable length
+							&ECompassCharHandle);       //Char_Handle
+
+  if (ret != BLE_STATUS_SUCCESS) {
+	  goto fail;
+  }
+
+  BV_APP_Status BV_status = BV_APP_add_char(HWServW2STHandle);
+
+  if(BV_status != BV_APP_SUCCESS)
+  {
+	  PRINTF("Error while adding BV_APP_add_char(ServiceHandle).\n");
+	  return APP_ERROR;
+  }
+
+  INERTIAL_APP_Status IN_status = INERTIAL_APP_add_char(HWServW2STHandle);
+
+  if(IN_status != INERTIAL_APP_SUCCESS)
+  {
+	  PRINTF("Error while adding char INERTIAL_APP_add_char(ServiceHandle).\n");
+	  return APP_ERROR;
+  }
+
   /* ************************ */
 
   COPY_CONFIG_SERVICE_UUID(uuid);
@@ -638,6 +697,7 @@ tBleStatus Add_Environmental_Sensor_Service(void)
   if (ret != BLE_STATUS_SUCCESS) {
     goto fail;
   }
+
   /* ************************ */
                            
   return BLE_STATUS_SUCCESS;
@@ -648,66 +708,11 @@ fail:
 }
 
 /**
- * @brief  Add the HW Features service using a vendor specific profile
- * @param  None
- * @retval tBleStatus Status
+ * @brief Get value HWServW2STHandle
  */
-tBleStatus Add_HW_SW_ServW2ST_Service(void)
+uint16_t GetHWServW2STHandle(void)
 {
-    tBleStatus ret;
-    uint8_t uuid[16];
-    
-    COPY_HW_SENS_W2ST_SERVICE_UUID(uuid);
-
-    ret = aci_gatt_add_service(UUID_TYPE_128,           //Service_UUID_Type
-                              (Service_UUID_t*)uuid,    //Service_UUID
-                              PRIMARY_SERVICE,          //Service_Type
-                              1+3*2,                    //Max_Attribute_Records that can be added
-                                                        // to this service.
-                                                        //1 + if(read|write) + 2 for every char,
-                                                        //if(notify|indicate) + 3 for every char
-                              &HWServW2STHandle);      //Service_Handle
-
-    if (ret != BLE_STATUS_SUCCESS){
-        goto fail;
-    }
-    
-    COPY_ACC_EVENT_W2ST_CHAR_UUID(uuid);
-    ret =  aci_gatt_add_char(HWServW2STHandle,          //Service_Handle
-                            UUID_TYPE_128,              //UUID type
-                            (Char_UUID_t*)uuid,         //Char_UUID_t
-                            2+3,                        //Maximum length of the characteristic value
-                            CHAR_PROP_NOTIFY | 
-                            CHAR_PROP_READ,             //Char_Properties
-                            ATTR_PERMISSION_NONE,       //Security permission flags
-                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,//event mask
-                            16,                         //Enc_Key_Size
-                            1,                          //Is_Variable length, 0 - Fixed length, 1 - Variable length
-                            &AccEventCharHandle);       //Char_Handle
-
-    if (ret != BLE_STATUS_SUCCESS){
-        goto fail;
-    }
-    
-    COPY_ECOMPASS_W2ST_CHAR_UUID(uuid);
-    ret =  aci_gatt_add_char(HWServW2STHandle,          //Service_Handle
-                            UUID_TYPE_128,              //UUID type
-                            (Char_UUID_t*)uuid,         //Char_UUID_t
-                            2+2,                        //Maximum length of the characteristic value
-                            CHAR_PROP_NOTIFY,           //Char_Properties
-                            ATTR_PERMISSION_NONE,       //Security permission flags
-                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,//event mask
-                            16,                         //Enc_Key_Size
-                            0,                          //Is_Variable length, 0 - Fixed length, 1 - Variable length
-                            &ECompassCharHandle);       //Char_Handle
-
-    if (ret != BLE_STATUS_SUCCESS) {
-        goto fail;
-    }
-    
-    return BLE_STATUS_SUCCESS;
-fail:
-    return BLE_STATUS_ERROR;
+	return HWServW2STHandle;
 }
 
 /**
@@ -749,7 +754,7 @@ void BatUpdate()
         buff[8] = Status;
     }
 
-    aci_gatt_update_char_value(EnvServHandle, VbatHandle, 0, sizeof(buff),buff);
+    aci_gatt_update_char_value(HWServW2STHandle, VbatHandle, 0, sizeof(buff),buff);
 }
 
 /**
@@ -757,10 +762,10 @@ void BatUpdate()
  */
 void LedUpdate(Led_TypeDef led)
 {
-        uint8_t buff[2+1];
-        STORE_LE_16(buff  ,3);
-        buff[2] = BSP_LED_IsOn(led);                  
-        aci_gatt_update_char_value(EnvServHandle, LedCharHandle, 0, 2+1,buff);
+	uint8_t buff[2+1];
+	STORE_LE_16(buff  ,3);
+	buff[2] = BSP_LED_IsOn(led);
+	aci_gatt_update_char_value(HWServW2STHandle, LedCharHandle, 0, 2+1,buff);
 }
 
 #if 0
@@ -796,31 +801,54 @@ tBleStatus CoLuxUpdate(void)
 
 /**
  * @brief  Send a notification When the DS3 detects one Acceleration event
- * @param  Command to Send
+ * @param  Acceleration event and steps to Send
  * @retval tBleStatus Status
  */
-tBleStatus AccEvent_Notify(uint16_t Command, uint8_t dimByte)
+tBleStatus AccEventSteps_Notify(uint8_t event, uint16_t steps)
 {
     tBleStatus ret= BLE_STATUS_SUCCESS;
-    uint8_t buff_2[2+2];
-    uint8_t buff_3[2+3];
+    uint8_t buff[2+3] = {0};
 
-    switch(dimByte)
-    {
-    case 2:
-        STORE_LE_16(buff_2, (tick_ms()>>3));
-        STORE_LE_16(buff_2+2,Command);
-        ret = aci_gatt_update_char_value(HWServW2STHandle, AccEventCharHandle, 0, 2+2,buff_2);
-        break;
-    case 3:
-        STORE_LE_16(buff_3, (tick_ms()>>3));
-        buff_3[2]= 0;
-        STORE_LE_16(buff_3+3,Command);
-        ret = aci_gatt_update_char_value(HWServW2STHandle, AccEventCharHandle, 0, 2+3,buff_3);
-        break;
-    }
+	STORE_LE_16(buff, (tick_ms()>>3));
+	buff[2]= event;
+	STORE_LE_16(buff+3,steps);
+	ret = aci_gatt_update_char_value(HWServW2STHandle, AccEventCharHandle, 0, sizeof(buff),buff);
 
     return ret;
+}
+
+/**
+ * @brief  Send a steps When the DS3 detects
+ * @param  Steps to Send
+ * @retval tBleStatus Status
+ */
+tBleStatus AccEvent_Notifi(uint8_t event)
+{
+	tBleStatus ret= BLE_STATUS_SUCCESS;
+	uint8_t buff[2+1] = {0};
+
+	STORE_LE_16(buff, (tick_ms()>>3));
+	buff[2]= event;
+	ret = aci_gatt_update_char_value(HWServW2STHandle, AccEventCharHandle, 0, sizeof(buff),buff);
+
+	return ret;
+}
+
+/**
+ * @brief  Send a steps When the DS3 detects
+ * @param  Steps to Send
+ * @retval tBleStatus Status
+ */
+tBleStatus AccEventSteps_Notifi(uint16_t steps)
+{
+	tBleStatus ret= BLE_STATUS_SUCCESS;
+	uint8_t buff[2+2] = {0};
+
+	STORE_LE_16(buff, (tick_ms()>>3));
+	STORE_LE_16(buff+2,steps);
+	ret = aci_gatt_update_char_value(HWServW2STHandle, AccEventCharHandle, 0, sizeof(buff),buff);
+
+	return ret;
 }
 
 /* @brief  Send a notification for answering to a configuration command for Accelerometer events
@@ -838,7 +866,6 @@ tBleStatus Config_Notify(uint32_t Feature, uint8_t Command, uint8_t data)
     buff[6] = Command;
     buff[7] = data;
 
-//    return aci_gatt_update_char_value(ConfigServW2STHandle, ConfigCharHandle, 0, 8,buff);
     volatile tBleStatus ret= aci_gatt_update_char_value(ConfigServW2STHandle, ConfigCharHandle, 0, 8,buff);
     
     if(ret == BLE_STATUS_SUCCESS){
@@ -930,7 +957,7 @@ static tBleStatus Environmental_Update(int32_t Press,uint16_t Hum,int16_t Temp1)
   STORE_LE_16(buff+BuffPos,Temp1);
   BuffPos+=2;
   
-  ret = aci_gatt_update_char_value(EnvServHandle, EnvironmentalCharHandle, 0, EnvironmentalCharSize,buff);
+  ret = aci_gatt_update_char_value(HWServW2STHandle, EnvironmentalCharHandle, 0, EnvironmentalCharSize,buff);
 
   if (ret != BLE_STATUS_SUCCESS){
     return BLE_STATUS_ERROR;
@@ -981,7 +1008,7 @@ tBleStatus Co_Lux_Update(uint32_t CoValue, uint16_t LuxValue)
   STORE_LE_16(buff+2, LuxValue);
   STORE_LE_32(buff+4, CoValue);
 
-  ret = aci_gatt_update_char_value(EnvServHandle, Co_LuxCharHandle, 0, sizeof(buff),buff);
+  ret = aci_gatt_update_char_value(HWServW2STHandle, Co_LuxCharHandle, 0, sizeof(buff),buff);
 
   if (ret != BLE_STATUS_SUCCESS){
     return BLE_STATUS_ERROR;

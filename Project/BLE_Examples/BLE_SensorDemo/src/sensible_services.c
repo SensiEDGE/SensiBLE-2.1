@@ -13,7 +13,7 @@
 #include "BlueNRG1_flash.h"
 #include "OTA.h"
 #include "sensible20_compass.h"
-
+#include "calculate_cct.h"
 #include "main.h"
 
 /* External symbols ----------------------------------------------------------*/
@@ -24,8 +24,6 @@ volatile BOOL ForceReCalibration = FALSE;
 extern volatile uint8_t audio_streaming_active;
 
 /* Local symbols -------------------------------------------------------------*/
-//static uint16_t EnvServHandle;
-
 static uint16_t consoleHandle = 0;
 static uint16_t termCharHandle = 0;
 static uint16_t stdErrCharHandle = 0;
@@ -33,10 +31,10 @@ static uint16_t stdErrCharHandle = 0;
 static uint16_t EnvironmentalCharSize;
 static uint16_t EnvironmentalCharHandle;
 static uint16_t LedCharHandle;
-//static uint16_t LuxCharHandle;
-static uint16_t Co_LuxCharHandle;
+static uint16_t LuxCharHandle;
 static uint16_t VbatHandle;
 static uint16_t AudioLevelCharHandle;
+static uint16_t ColorAmbientLightHandle;
 
 static uint16_t ConfigServW2STHandle;
 static uint16_t ConfigCharHandle;
@@ -72,11 +70,11 @@ static uint32_t ConnectionBleStatus;
 #ifdef SENSIBLE_2_0
 #define MCU_TYPE                "BlueNRG_1"
 #define PACKAGE_NAME            "SensiBLE-2.0"
-#define VERSION                 '2','3','0'
+#define VERSION                 '2','3','1'
 #elif defined SENSIBLE_2_1
 #define MCU_TYPE                "BlueNRG_2"
 #define PACKAGE_NAME            "SensiBLE-2.1"
-#define VERSION                 '3','1','2'
+#define VERSION                 '3','1','3'
 #else
 #error "SENSIBLE_2_0 or SENSIBLE_2_1 must be defined!"
 #endif
@@ -103,17 +101,11 @@ do {\
 #define COPY_HW_SENS_W2ST_SERVICE_UUID(uuid_struct)    COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0x9a,0xb4,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_ECOMPASS_W2ST_CHAR_UUID(uuid_struct)      COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x40,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_ENVIRONMENTAL_W2ST_CHAR_UUID(uuid_struct) COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-
 #define COPY_MIC_W2ST_CHAR_UUID(uuid_struct)           COPY_UUID_128(uuid_struct,0x04,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-
+#define COPY_COLOR_AMBIENT_LIGHT_CHAR_UUID(uuid_struct)COPY_UUID_128(uuid_struct,0x00,0x00,0x00,0x15,0x00,0x02,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_LED_W2ST_CHAR_UUID(uuid_struct)           COPY_UUID_128(uuid_struct,0x20,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-//#define COPY_LUX_W2ST_CHAR_UUID(uuid_struct)           COPY_UUID_128(uuid_struct,0x01,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-//#warning "CO sensor here"
-#define COPY_CO_LUX_W2ST_CHAR_UUID(uuid_struct)        COPY_UUID_128(uuid_struct,0x01,0x00,0x80,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-
+#define COPY_LUX_W2ST_CHAR_UUID(uuid_struct)           COPY_UUID_128(uuid_struct,0x01,0x00,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_BAT_W2ST_CHAR_UUID(uuid_struct)           COPY_UUID_128(uuid_struct,0x00,0x02,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
-
-#define COPY_ACC_MAG_W2ST_CHAR_UUID(uuid_struct)       COPY_UUID_128(uuid_struct,0x00,0xA0,0x00,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 #define COPY_ACC_EVENT_W2ST_CHAR_UUID(uuid_struct)     COPY_UUID_128(uuid_struct,0x00,0x00,0x04,0x00,0x00,0x01,0x11,0xe1,0xac,0x36,0x00,0x02,0xa5,0xd5,0xc5,0x1b)
 
 /* Configuration Service */
@@ -199,8 +191,8 @@ float DBNOISE_Value_Old_Ch[AUDIO_CHANNELS];
 
 /* Local functions prototypes ------------------------------------------------*/
 static tBleStatus Environmental_Update(int32_t Press,uint16_t Hum,int16_t Temp1);//,int16_t Temp2);
-//static tBleStatus Lux_Update(uint16_t LuxValue);
-static tBleStatus Co_Lux_Update(uint32_t CoValue, uint16_t LuxValue);
+static tBleStatus Lux_Update(uint16_t LuxValue);
+static tBleStatus ColorAmbient_Update(uint32_t lux, uint16_t cct, uint16_t uv);
 
 static uint8_t DebugConsoleCommandParsing(uint8_t * att_data, uint8_t data_length);
 static void processTermWrite(uint8_t * att_data, uint8_t data_length);
@@ -233,12 +225,20 @@ void aci_gatt_read_permit_req_event(uint16_t Connection_Handle,
         } else {
             StepCount = 0;
         }
+        AccEventSteps_Notify(ACC_PEDOMETER, StepCount);
+        //Only for ST BLE Sensor Classic
         AccEventSteps_Notifi(StepCount);
     } else if (Attribute_Handle == EnvironmentalCharHandle + 1) {
     	EnvironmentalUpdate();
     } else if(Attribute_Handle == LedCharHandle + 1){
         /* Read Request for Led Status */
         LedUpdate(LED1);
+    } else if(Attribute_Handle == LuxCharHandle + 1){
+    	LuxUpdate();
+    } else if(Attribute_Handle == VbatHandle + 1){
+    	BatUpdate();
+    } else if(Attribute_Handle == ColorAmbientLightHandle + 1){
+    	ColorAmbientLightUpdate();
     }
 
     //EXIT:
@@ -246,8 +246,6 @@ void aci_gatt_read_permit_req_event(uint16_t Connection_Handle,
     	aci_gatt_allow_read(Connection_Handle);
 	}
 }
-
-
 
 /**
  * @brief This function handles attribure modified ebvetns for sensible 2.0
@@ -259,8 +257,6 @@ void sensible_aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
                                                 uint8_t Attr_Data_Length,
                                                 uint8_t Attr_Data[])
 {
-
-
 
     /* ---------------------------------------------------------------------- */
     if(Attr_Handle == LedCharHandle + 2) {
@@ -341,15 +337,21 @@ void sensible_aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
         } else if(Attr_Data[0] == 0x00) {
             APP_PER_enabled.APP_ENV_ENABLE = 0;// SensorsDisable();
         }
-    } else if(Attr_Handle == Co_LuxCharHandle + 2) {
-    /* ---------------------------------------------------------------------- */
-    /* CO & LUX sensors enable / disable command */
+    } else if(Attr_Handle == ColorAmbientLightHandle + 2) {
+    	 /* APP_COLOR_AMBIENT sensors enable / disable command */
         if(Attr_Data[0] == 0x01) {
-            APP_PER_enabled.APP_CO_LUX_ENABLE = 1;
+            APP_PER_enabled.APP_COLOR_AMBIENT = 1;
         } else if(Attr_Data[0] == 0x00) {
-            APP_PER_enabled.APP_CO_LUX_ENABLE = 0;
+            APP_PER_enabled.APP_COLOR_AMBIENT = 0;
         }
-
+    } else if(Attr_Handle == LuxCharHandle + 2) {
+	/* ---------------------------------------------------------------------- */
+	/* LUX sensors enable / disable command */
+		if(Attr_Data[0] == 0x01) {
+			APP_PER_enabled.APP_LUX_ENABLE = 1;
+		} else if(Attr_Data[0] == 0x00) {
+			APP_PER_enabled.APP_LUX_ENABLE = 0;
+		}
     } else if(Attr_Handle == ConfigCharHandle + 1) {
     /* ---------------------------------------------------------------------- */
     /* Configuration received */
@@ -417,7 +419,7 @@ void AudioProcess(uint16_t* PCM_Buffer)
     }
 }
 
-void MicLevelUpdate()
+void MicLevelUpdate(void)
 {
     uint16_t DBNOISE_Value_Ch[AUDIO_CHANNELS];
     uint8_t buff[2+1*(AUDIO_CHANNELS)];
@@ -447,16 +449,10 @@ void UpdateAll(void)
 {
     if(VbatState == 0) {
         EnvironmentalUpdate();
-//        LuxUpdate();
-        CoLuxUpdate();
+        LuxUpdate();
         LedUpdate(LED2);
     } else {
-        uint32_t soc = 0;
-        uint32_t voltage = 0;
-        int32_t current = 0;
-        
-        BSP_BatLevel_GetValues(&soc, &voltage, &current);
-        BatUpdate(soc, voltage, current);
+    	BatUpdate();
     }
 }
 
@@ -542,7 +538,7 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
   ret = aci_gatt_add_service(UUID_TYPE_128,           //Service_UUID_Type
 							(Service_UUID_t*)uuid,    //Service_UUID
 							PRIMARY_SERVICE,          //Service_Type
-							1+3*10,                    //Max_Attribute_Records that can be added
+							1+3*11,                    //Max_Attribute_Records that can be added
 													  // to this service.
 													  //1 + if(read|write) + 2 for every char,
 													  //if(notify|indicate) + 3 for every char
@@ -559,9 +555,9 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
   uuid[14] |= 0x04; /* One Temperature value*/ //5
   uuid[14] |= 0x08; /* Humidity */
   uuid[14] |= 0x10; /* Pressure value*/
-  
+
   EnvironmentalCharSize = 10;// if second temperature - 12;
-  
+
   ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, EnvironmentalCharSize,
                            CHAR_PROP_NOTIFY|CHAR_PROP_READ,
                            ATTR_PERMISSION_NONE,
@@ -571,10 +567,10 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
   if (ret != BLE_STATUS_SUCCESS) {
     goto fail;
   }
-  /* Not use */
-#if 0
+
+  /* ************************ */
   COPY_LUX_W2ST_CHAR_UUID(uuid);
-  ret =  aci_gatt_add_char(EnvServHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2,
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2,
                            CHAR_PROP_NOTIFY|CHAR_PROP_READ,
                            ATTR_PERMISSION_NONE,
                            GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
@@ -583,18 +579,7 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
   if (ret != BLE_STATUS_SUCCESS) {
     goto fail;
   }
-#endif
   
-  COPY_CO_LUX_W2ST_CHAR_UUID(uuid);
-  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+2+4,
-                           CHAR_PROP_NOTIFY|CHAR_PROP_READ,
-                           ATTR_PERMISSION_NONE,
-                           GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
-                           16, 0, &Co_LuxCharHandle);
-
-  if (ret != BLE_STATUS_SUCCESS) {
-    goto fail;
-  }
   /* ************************ */
   COPY_LED_W2ST_CHAR_UUID(uuid);
   ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid, 2+1,
@@ -630,6 +615,7 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
     goto fail;
   }
   
+  /* ************************ */
   COPY_ACC_EVENT_W2ST_CHAR_UUID(uuid);
   ret =  aci_gatt_add_char(HWServW2STHandle,          //Service_Handle
 							UUID_TYPE_128,              //UUID type
@@ -647,6 +633,7 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
 	  goto fail;
   }
 
+  /* ************************ */
   COPY_ECOMPASS_W2ST_CHAR_UUID(uuid);
   ret =  aci_gatt_add_char(HWServW2STHandle,          //Service_Handle
 							UUID_TYPE_128,              //UUID type
@@ -661,6 +648,18 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
 
   if (ret != BLE_STATUS_SUCCESS) {
 	  goto fail;
+  }
+
+  /* ************************ */
+  COPY_COLOR_AMBIENT_LIGHT_CHAR_UUID(uuid);
+  ret =  aci_gatt_add_char(HWServW2STHandle, UUID_TYPE_128, (Char_UUID_t*)uuid,2+4+2+2,
+                           CHAR_PROP_NOTIFY|CHAR_PROP_READ,
+                           ATTR_PERMISSION_NONE,
+                           GATT_NOTIFY_READ_REQ_AND_WAIT_FOR_APPL_RESP,
+                           16, 0, &ColorAmbientLightHandle);
+
+  if (ret != BLE_STATUS_SUCCESS) {
+    goto fail;
   }
 
   BV_APP_Status BV_status = BV_APP_add_char(HWServW2STHandle);
@@ -680,7 +679,6 @@ tBleStatus Add_HW_SW_ServW2ST_Service(void)
   }
 
   /* ************************ */
-
   COPY_CONFIG_SERVICE_UUID(uuid);
   ret = aci_gatt_add_service(UUID_TYPE_128,  (Service_UUID_t*)uuid, PRIMARY_SERVICE, 1+3,&ConfigServW2STHandle);
   
@@ -716,9 +714,9 @@ uint16_t GetHWServW2STHandle(void)
 }
 
 /**
- * @brief Send battery level to the application
+ * @brief Update battery level to the application
  */
-void BatUpdate()
+tBleStatus BatUpdate(void)
 {
     uint32_t soc = 0;
     uint32_t voltage = 0;
@@ -754,21 +752,20 @@ void BatUpdate()
         buff[8] = Status;
     }
 
-    aci_gatt_update_char_value(HWServW2STHandle, VbatHandle, 0, sizeof(buff),buff);
+    return aci_gatt_update_char_value(HWServW2STHandle, VbatHandle, 0, sizeof(buff),buff);
 }
 
 /**
  * @brief Update led state to application
  */
-void LedUpdate(Led_TypeDef led)
+tBleStatus LedUpdate(Led_TypeDef led)
 {
 	uint8_t buff[2+1];
 	STORE_LE_16(buff  ,3);
 	buff[2] = BSP_LED_IsOn(led);
-	aci_gatt_update_char_value(HWServW2STHandle, LedCharHandle, 0, 2+1,buff);
+	return aci_gatt_update_char_value(HWServW2STHandle, LedCharHandle, 0, 2+1,buff);
 }
 
-#if 0
 /**
  * @brief  Read light sensor value and send via BLE
  * @param
@@ -776,27 +773,25 @@ void LedUpdate(Led_TypeDef led)
  */
 tBleStatus LuxUpdate(void)
 {
-    uint16_t lux;
+    uint16_t lux = 0;
 
     SensorsReadLux(&lux);
     return Lux_Update(lux);
 }
-#endif
 
-/**
- * @brief  Read light sensor value and send via BLE
- * @param  
- * @retval tBleStatus Status
- */
-tBleStatus CoLuxUpdate(void)
+tBleStatus ColorAmbientLightUpdate(void)
 {
     uint16_t lux = 0;
-    uint16_t uv = 0;
-    
+    uint16_t cct = 0;
+    int16_t uv = 0;
+
     SensorsReadLux(&lux);
+    cct = get_cct();
     SensorsReadUv(&uv);
-    
-    return Co_Lux_Update(uv * 100, lux);
+
+    if (uv < 0) uv = 0;
+
+    return ColorAmbient_Update(lux, cct, uv);
 }
 
 /**
@@ -965,7 +960,6 @@ static tBleStatus Environmental_Update(int32_t Press,uint16_t Hum,int16_t Temp1)
   return BLE_STATUS_SUCCESS;
 }
 
-#if 0
 /**
  * @brief  Update LLux characteristic value
  * @param  uint16_t Value in Lux
@@ -974,7 +968,7 @@ static tBleStatus Environmental_Update(int32_t Press,uint16_t Hum,int16_t Temp1)
 static tBleStatus Lux_Update(uint16_t LuxValue)
 {
   tBleStatus ret;
-  uint8_t buff[2+2];
+  uint8_t buff[2+8] = {0};
 
   static uint16_t time = 0;
 
@@ -982,33 +976,37 @@ static tBleStatus Lux_Update(uint16_t LuxValue)
   STORE_LE_16(buff  ,(time));
   STORE_LE_16(buff+2,LuxValue);
 
-  ret = aci_gatt_update_char_value(EnvServHandle, LuxCharHandle, 0, 2+2,buff);
+  ret = aci_gatt_update_char_value(HWServW2STHandle, LuxCharHandle, 0, 2+2,buff);
 
   if (ret != BLE_STATUS_SUCCESS){
     return BLE_STATUS_ERROR;
   }
   return BLE_STATUS_SUCCESS;
 }
-#endif
 
 /**
- * @brief  Update CO & Lux characteristic value
+ * @brief  Update CO characteristic value
  * @param  uint16_t Value in Lux
  * @retval tBleStatus   Status
  */
-tBleStatus Co_Lux_Update(uint32_t CoValue, uint16_t LuxValue)
+tBleStatus ColorAmbient_Update(uint32_t lux, uint16_t cct, uint16_t uv)
 {
   tBleStatus ret;
-  uint8_t buff[2+2+4];
+  uint8_t buff[2+4+2+2];
+  uint8_t pos = 0;
   static uint16_t time = 0;
 
   time += 3;
 
-  STORE_LE_16(buff, (time));
-  STORE_LE_16(buff+2, LuxValue);
-  STORE_LE_32(buff+4, CoValue);
+  STORE_LE_16(&buff[pos], time);
+  pos += 2;
+  STORE_LE_32(&buff[pos], lux);
+  pos += 4;
+  STORE_LE_16(&buff[pos], cct);
+  pos += 2;
+  STORE_LE_16(&buff[pos], uv);
 
-  ret = aci_gatt_update_char_value(HWServW2STHandle, Co_LuxCharHandle, 0, sizeof(buff),buff);
+  ret = aci_gatt_update_char_value(HWServW2STHandle, ColorAmbientLightHandle, 0, sizeof(buff),buff);
 
   if (ret != BLE_STATUS_SUCCESS){
     return BLE_STATUS_ERROR;
@@ -1300,24 +1298,26 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* Multiple */
 				switch (Data) {
 				case 1:
-					EnableHWMultipleEvents();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableHWMultipleEvents();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_MULTIPLE_EVENTS);
 					break;
 				case 0:
-					DisableHWMultipleEvents();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableHWMultipleEvents();
 					break;
 				}
 				break;
 			case 'o':
 				switch (Data) {
 				case 1:
-					EnableHWOrientation6D();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableHWOrientation6D();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_6DORIENTATION);
 					break;
 				case 0:
-					DisableHWOrientation6D();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableHWOrientation6D();
 					break;
 				}
 				break;
@@ -1327,12 +1327,13 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* Double Tap */
 				switch (Data) {
 				case 1:
-					EnableHWDoubleTap();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableHWDoubleTap();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_DOUBLE_TAP);
 					break;
 				case 0:
-					DisableHWDoubleTap();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableHWDoubleTap();
 					break;
 				}
 				break;
@@ -1340,12 +1341,13 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* FreeFall */
 				switch (Data) {
 				case 1:
-					EnableHWFreeFall();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableHWFreeFall();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_FREE_FALL);
 					break;
 				case 0:
-					DisableHWFreeFall();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableHWFreeFall();
 					break;
 				}
 				break;
@@ -1354,12 +1356,13 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* Single Tap */
 				switch (Data) {
 				case 1:
-					EnableHWSingleTap();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableHWSingleTap();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_SINGLE_TAP);
 					break;
 				case 0:
-					DisableHWSingleTap();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableHWSingleTap();
 					break;
 				}
 				break;
@@ -1367,13 +1370,14 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* Pedometer */
 				switch (Data) {
 				case 1:
+					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
 					ResetSWPedometer();
 					EnableSWPedometer();
-					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					W2ST_ON_HW_FEATURE(W2ST_HWF_PEDOMETER);
 					break;
 				case 0:
-					DisableSWPedometer();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableSWPedometer();
 					break;
 				}
 				break;
@@ -1381,12 +1385,13 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* Wake UP */
 				switch (Data) {
 				case 1:
-					EnableHWWakeUp();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableHWWakeUp();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_WAKE_UP);
 					break;
 				case 0:
-					DisableHWWakeUp();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableHWWakeUp();
 					break;
 				}
 				break;
@@ -1394,12 +1399,13 @@ uint32_t ConfigCommandParsing(uint8_t * att_data, uint8_t data_length)
 				/* Tilt */
 				switch (Data) {
 				case 1:
-					EnableSWTilt();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					EnableSWTilt();
+					W2ST_ON_HW_FEATURE(W2ST_HWF_TILT);
 					break;
 				case 0:
-					DisableSWTilt();
 					Config_Notify(FEATURE_MASK_ACC_EVENTS, Command, Data);
+					DisableSWTilt();
 					break;
 				}
 				break;

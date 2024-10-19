@@ -1283,11 +1283,12 @@ static DrvStatusTypeDef LIS2DW12_Enable_Wake_Up_Detection(DrvContextTypeDef *han
     if(LIS2DW12_ACC_W_PinFunction_INT1((void*)handle, LIS2DW12_ACC_INT1_MODE_WAKE_UP, 1) == MEMS_ERROR){
         goto fail;
     }
-
-    /* Latch interrupt. */
-    if(LIS2DW12_ACC_W_LatchIntteruptRq((void *)handle, LIS2DW12_ACC_LIR_ENABLE) == MEMS_ERROR){
-        goto fail;
-    }
+    
+    /* @Note The code does not work properly in multiple event mode if latching interrupt. */
+//    /* Latch interrupt. */
+//    if(LIS2DW12_ACC_W_LatchIntteruptRq((void *)handle, LIS2DW12_ACC_LIR_ENABLE) == MEMS_ERROR){
+//        goto fail;
+//    }
 
     /* Enable interrupts. */
     if(LIS2DW12_ACC_W_HardwarePin((void *)handle, LIS2DW12_ACC_INTERRUPTS_ENABLE_ENABLE) == MEMS_ERROR){

@@ -49,6 +49,7 @@
 #include "sensible_sensors.h"
 #include "sensible20_compass.h"
 
+#include "sleep.h"
 #include "main.h"
 #include "clock.h"
 #include <inttypes.h>
@@ -118,12 +119,6 @@ static uint32_t updateAllTime = 0;
 static uint32_t micLevelUpdateTime = 0;
 static uint32_t ledSwitchTime = 0;
 static BOOL ledActive = FALSE;// Variable used for holding LED state;
-
-///* BlueVoice service UUID*/
-//static const uint8_t bluemic1_service_uuid[16] =
-//{
-//  0x1b,0xc5,0xd5,0xa5,0x02,0x00,0xb4,0x9a,0xe1,0x11,0x01,0x00,0x00,0x00,0x00,0x00
-//};
 
 /**
  * @}
@@ -253,6 +248,22 @@ APP_Status PER_APP_Advertise(void)
     AD_TYPE_COMPLETE_LOCAL_NAME, NAME_WEAR
   };
 
+  uint32_t feature = SENSI_UUID_MASK_PEDOMETER;
+  feature |= SENSI_UUID_MASK_COMPASS;
+  feature |= SENSI_UUID_MASK_ACC_EVENT;
+  feature |= SENSI_UUID_MASK_BAT;
+  feature |= SENSI_UUID_MASK_TMP1;
+  feature |= SENSI_UUID_MASK_HUM;
+  feature |= SENSI_UUID_MASK_PRES;
+  feature |= SENSI_UUID_MASK_AMG;
+  feature |= SENSI_UUID_MASK_ACC;
+  feature |= SENSI_UUID_MASK_LUX;
+  feature |= SENSI_UUID_MASK_MIC_LEVEL;
+  feature |= SENSI_UUID_MASK_ADPC_AUDIO;
+  feature |= SENSI_UUID_MASK_SWITCH;
+  feature |= SENSI_UUID_MASK_ADPCM_SYNC;
+
+
 #if (defined SENSIBLE_2_0) || (defined SENSIBLE_2_1)
   uint8_t manuf_data[24] = {
 
@@ -269,11 +280,14 @@ APP_Status PER_APP_Advertise(void)
          // 0x80 for a generic Nucleo board
          // 0x81 for a Nucleo board exporting remote feature
          0x80,// 0x00, // The device type
-         0x48 | 0x20 | 0x01 | 0x04,        // 0x48,      /* AudioSync+AudioData */
-         0xBE,//(removed second temperature) 0xBF,//(1 ) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (0 << 5) | (0 << 7), /*Second Temp, Bat, Temp, Hum, Pres, Mag, Acc */
+
+		 //(removed second temperature) 0xBF,//(1 ) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (0 << 5) | (0 << 7), /*Second Temp, Bat, Temp, Hum, Pres, Mag, Acc */
 //         #warning "CO sensor here"
-         0x04 | 0x80,/* Accelerometer Events | CO sensor*/
-         0x40
+		 /* Accelerometer Events | CO sensor*/
+		 (feature & 0xff000000) >> 24,
+		 (feature & 0x00ff0000) >> 16,
+		 (feature & 0x0000ff00) >> 8,
+		 (feature & 0x000000ff)
   };
 
 #else // For ST board
@@ -470,9 +484,9 @@ void APP_Tick(void)
                   EnvironmentalUpdate();
               }
 
-              if (APP_PER_enabled.APP_CO_LUX_ENABLE != 0)
+              if (APP_PER_enabled.APP_LUX_ENABLE != 0)
               {
-                  CoLuxUpdate();
+                  LuxUpdate();
               }
 
               if (APP_PER_enabled.APP_LED_ENABLE != 0)
@@ -483,6 +497,11 @@ void APP_Tick(void)
               if (APP_PER_enabled.APP_BAT_ENABLE != 0)
               {
                   BatUpdate();
+              }
+
+              if (APP_PER_enabled.APP_COLOR_AMBIENT != 0)
+              {
+            	  ColorAmbientLightUpdate();
               }
 
               updateAllTime = tick_ms() + APP_UPDATE_ALL_PERIOD;
@@ -505,8 +524,6 @@ static void ledBlink(Led_TypeDef led)
         ledSwitchTime = tick_ms() + LED_ON_TIME;
     }
 }
-
-#include "sleep.h"
 
 /**
  * @brief  Error handler.
@@ -687,14 +704,7 @@ void aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
     if(Attr_Data[0] == 0x01)
     {
       APP_PER_enabled.APP_INERTIAL_ENABLE = 1;
-#if (defined SENSIBLE_2_0) || (defined SENSIBLE_2_1)
-      /* Inertial sensors Enable */
-      INERTIAL_APP_Init();
-      
-      SensorsEnableMag();
-      
-      MFT_Configuration();
-#endif // SENSIBLE_2_0
+
       INERTIAL_StartTimer();
     }
     else if(Attr_Data[0] == 0x00)
@@ -703,13 +713,6 @@ void aci_gatt_attribute_modified_event(uint16_t Connection_Handle,
       {
         APP_PER_enabled.APP_INERTIAL_ENABLE = 0;//APP_READY;
       }
-#if (defined SENSIBLE_2_0) || (defined SENSIBLE_2_1)
-      INERTIAL_APP_Disable();
-      
-      SensorsDisableMag();
-      
-      MFT_Disable();
-#endif // SENSIBLE_2_0
       INERTIAL_StopTimer();
     }
   }

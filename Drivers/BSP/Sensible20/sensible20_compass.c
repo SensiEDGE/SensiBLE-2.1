@@ -108,7 +108,6 @@ static BOOL saveCalibCoeffs(CompassCalibrationData_t* data);
   */
 void BSP_Compass_Start(void)
 {
-    SensorsEnableMag();
     compassIsActive = TRUE;
 }
 
@@ -120,7 +119,6 @@ void BSP_Compass_Start(void)
   */
 void BSP_Compass_Stop(void)
 {
-    SensorsDisableMag();
     compassIsActive = FALSE;
 }
 

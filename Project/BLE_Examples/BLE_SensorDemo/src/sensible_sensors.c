@@ -11,8 +11,6 @@
 #include "sensible20_magneto.h"
 #include "peripheral_mngr_app.h"
 #include "sensible20_port_exp.h"
-#include "HWAdvanceFeatures.h"
-#include "sensible_services.h"
 
 static void *HandleUvSensor;
 static void *HandleTempHts221;
@@ -175,7 +173,7 @@ SensibleResult_t SensorsDisableMag(void)
     return SENSIBLE_SENS_ERR;
 }
 
-SensibleResult_t SensorsReadUv(uint16_t* val)
+SensibleResult_t SensorsReadUv(int16_t* val)
 {
     if(COMPONENT_OK == BSP_ULTRAVIOLET_Get_Uv(HandleUvSensor, val)) {
         return SENSIBLE_SENS_OK;
@@ -223,6 +221,15 @@ SensibleResult_t SensorsReadPressure(float * val)
 SensibleResult_t SensorsReadLux(uint16_t* val)
 {
     if(LUX_OK == BSP_LUX_GetValue(val)) {
+        return SENSIBLE_SENS_OK;
+    } else {
+        return SENSIBLE_SENS_ERR;
+    }
+}
+
+SensibleResult_t SensorsReadRGB(uint32_t* red, uint32_t* green, uint32_t* blue)
+{
+    if(LUX_OK == BSP_RGB_GetValue(red, green, blue)) {
         return SENSIBLE_SENS_OK;
     } else {
         return SENSIBLE_SENS_ERR;

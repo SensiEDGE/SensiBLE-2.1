@@ -81,9 +81,11 @@ static uint8_t countSteps(
 /* Private variables begin ---------------------------------------------------*/
 AccStorage_t accValuesStorage = {0};
 
-static float const TRASHOLD = 10;
+//static float const KALMAN_COEFF = 0.1f;
+static float const TRASHOLD = 10;//0.005;
+//static uint8_t const SAMPLES = 4;
 #define SAMPLES 5
-static uint8_t const STEP_MIN_FREQ = 5;
+static uint8_t const STEP_MIN_FREQ = 10;//90;
 static uint32_t counter = 0;
 static uint8_t tmp = 0;
 /* Private variables end -----------------------------------------------------*/

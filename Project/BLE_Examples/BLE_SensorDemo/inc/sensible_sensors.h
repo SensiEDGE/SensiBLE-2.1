@@ -2,6 +2,8 @@
 #ifndef __SENSIBLE_SENSORS_H
 #define __SENSIBLE_SENSORS_H
 
+
+#include "sensor.h"
 /* Includes ------------------------------------------------------------------*/
 
 typedef enum {
@@ -43,12 +45,13 @@ void SensorsDisable(void);
 SensibleResult_t SensorsEnableMag(void);
 SensibleResult_t SensorsDisableMag(void);
 
-SensibleResult_t SensorsReadUv(uint16_t* val);
+SensibleResult_t SensorsReadUv(int16_t* val);
 SensibleResult_t SesnsorsReadTemp1(float * val);
 SensibleResult_t SensorsReadTemp2(float * val);
 SensibleResult_t SesnorsReadHumidity(float * val);
 SensibleResult_t SensorsReadPressure(float * val);
 SensibleResult_t SensorsReadLux(uint16_t* val);
+SensibleResult_t SensorsReadRGB(uint32_t* red, uint32_t* green, uint32_t* blue);
 SensibleResult_t SensorsReadMag(SensorAxes_t* axes);
 
 #endif /* __SENSIBLE_SENSORS_H */

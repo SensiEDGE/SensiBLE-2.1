@@ -45,7 +45,7 @@ static BOOL comparePosition(float newPosition, float oldPosition, float threshol
 /* Private function prototypes end  ------------------------------------------*/
 
 /* Private variables begin ---------------------------------------------------*/
-#define KALMAN_COEFF      0.6f
+#define KALMAN_COEFF      0.1f
 #define TILT_ANGLE        0.6109f//rad, it equals to 35 degrees
 #define TILT_DURATION     1000//ms
 

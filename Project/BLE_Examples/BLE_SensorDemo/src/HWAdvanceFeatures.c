@@ -5,7 +5,7 @@
 #include "sensible_services.h"
 #include "LIS2DW12_ACC_driver.h"
 #include "acceleroSamplesProcessing.h"
-
+#include "main.h"
 /* Exported variables ---------------------------------------------------------*/
 uint32_t HWAdvanceFeaturesStatus = 0;
 
@@ -61,8 +61,8 @@ void EnableSWPedometer(void)
         goto fail;
     }
     
-    W2ST_ON_HW_FEATURE(W2ST_HWF_PEDOMETER);
-    
+    AccEventSteps_Notify(ACC_PEDOMETER, GetStepSWPedometer());
+    //Only for ST BLE Sensor Classic
     AccEventSteps_Notifi(GetStepSWPedometer());
 
 fail: return;
@@ -123,9 +123,7 @@ void EnableSWTilt(void)
     if(BSP_ACCELERO_FIFO_Set_Mode_Ext(ACCELERO_handle, LIS2DW12_ACC_FMODE_STREAM) != COMPONENT_OK){
         goto fail;
     }
-    
-    W2ST_ON_HW_FEATURE(W2ST_HWF_TILT);
-    
+
 fail: return;
 }
 
@@ -150,13 +148,12 @@ void DisableSWTilt(void)
 void EnableHWOrientation6D(void)
 {
     /* Enable 6D orientation detection */
-    if(BSP_ACCELERO_Enable_6D_Orientation_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_ON_HW_FEATURE(W2ST_HWF_6DORIENTATION);
-    }
+    BSP_ACCELERO_Enable_6D_Orientation_Ext(ACCELERO_handle);
 
     AccEventType orientation = GetHWOrientation6D();
     AccEventSteps_Notify(orientation, GetStepSWPedometer());
     //Only for ST BLE Sensor Classic
+    DelayMs(10);
 	AccEvent_Notifi(orientation);
 }
 
@@ -168,9 +165,8 @@ void EnableHWOrientation6D(void)
 void DisableHWOrientation6D(void)
 {
     /* Disable 6D orientation detection */
-    if(BSP_ACCELERO_Disable_6D_Orientation_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_OFF_HW_FEATURE(W2ST_HWF_6DORIENTATION);
-    }
+    BSP_ACCELERO_Disable_6D_Orientation_Ext(ACCELERO_handle);
+    W2ST_OFF_HW_FEATURE(W2ST_HWF_6DORIENTATION);
 }
 
 /**
@@ -241,9 +237,7 @@ fail: return ACC_NOT_USED;
 void EnableHWWakeUp(void)
 {
     /* Enable Wake up detection */
-    if(BSP_ACCELERO_Enable_Wake_Up_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_ON_HW_FEATURE(W2ST_HWF_WAKE_UP);
-    }
+    BSP_ACCELERO_Enable_Wake_Up_Detection_Ext(ACCELERO_handle);
 }
 
 /**
@@ -254,9 +248,8 @@ void EnableHWWakeUp(void)
 void DisableHWWakeUp(void)
 {
     /* Disable Wake up detection */
-    if(BSP_ACCELERO_Disable_Wake_Up_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_OFF_HW_FEATURE(W2ST_HWF_WAKE_UP);
-    }
+    BSP_ACCELERO_Disable_Wake_Up_Detection_Ext(ACCELERO_handle);
+    W2ST_OFF_HW_FEATURE(W2ST_HWF_WAKE_UP);
 }
 
 /**
@@ -267,10 +260,9 @@ void DisableHWWakeUp(void)
 void EnableHWFreeFall(void)
 {
     /* Enable Free Fall detection */
-    if(BSP_ACCELERO_Enable_Free_Fall_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_ON_HW_FEATURE(W2ST_HWF_FREE_FALL);
-        BSP_ACCELERO_Set_Free_Fall_Threshold_Ext(ACCELERO_handle, LIS2DW12_ACC_FF_THS_7);
-    }
+    BSP_ACCELERO_Enable_Free_Fall_Detection_Ext(ACCELERO_handle);
+    BSP_ACCELERO_Set_Free_Fall_Threshold_Ext(ACCELERO_handle, LIS2DW12_ACC_FF_THS_7);
+
 }
 
 /**
@@ -281,9 +273,8 @@ void EnableHWFreeFall(void)
 void DisableHWFreeFall(void)
 {
     /* Disable Free Fall detection */
-    if(BSP_ACCELERO_Disable_Free_Fall_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_OFF_HW_FEATURE(W2ST_HWF_FREE_FALL);
-    }
+    BSP_ACCELERO_Disable_Free_Fall_Detection_Ext(ACCELERO_handle);
+	W2ST_OFF_HW_FEATURE(W2ST_HWF_FREE_FALL);
 }
 
 /**
@@ -294,9 +285,7 @@ void DisableHWFreeFall(void)
 void EnableHWDoubleTap(void)
 {
     /* Enable Double Tap detection */
-    if(BSP_ACCELERO_Enable_Double_Tap_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_ON_HW_FEATURE(W2ST_HWF_DOUBLE_TAP);
-    }
+    BSP_ACCELERO_Enable_Double_Tap_Detection_Ext(ACCELERO_handle);
 }
 
 /**
@@ -307,9 +296,8 @@ void EnableHWDoubleTap(void)
 void DisableHWDoubleTap(void)
 {
     /* Disable Double Tap detection */
-    if(BSP_ACCELERO_Disable_Double_Tap_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_OFF_HW_FEATURE(W2ST_HWF_DOUBLE_TAP);
-    }
+    BSP_ACCELERO_Disable_Double_Tap_Detection_Ext(ACCELERO_handle);
+    W2ST_OFF_HW_FEATURE(W2ST_HWF_DOUBLE_TAP);
 }
 
 /**
@@ -320,9 +308,7 @@ void DisableHWDoubleTap(void)
 void EnableHWSingleTap(void)
 {
     /* Enable Single Tap detection */
-    if(BSP_ACCELERO_Enable_Single_Tap_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_ON_HW_FEATURE(W2ST_HWF_SINGLE_TAP);
-    }  
+    BSP_ACCELERO_Enable_Single_Tap_Detection_Ext(ACCELERO_handle);
 }
 
 /**
@@ -333,9 +319,8 @@ void EnableHWSingleTap(void)
 void DisableHWSingleTap(void)
 {
     /* Disable Single Tap detection */
-    if(BSP_ACCELERO_Disable_Single_Tap_Detection_Ext(ACCELERO_handle) == COMPONENT_OK){
-        W2ST_OFF_HW_FEATURE(W2ST_HWF_SINGLE_TAP);
-    }
+    BSP_ACCELERO_Disable_Single_Tap_Detection_Ext(ACCELERO_handle);
+    W2ST_OFF_HW_FEATURE(W2ST_HWF_SINGLE_TAP);
 }
 
 /**
@@ -356,8 +341,6 @@ void EnableHWMultipleEvents(void)
     EnableHWWakeUp();
     EnableSWPedometer();
     EnableSWTilt();
-
-    W2ST_ON_HW_FEATURE(W2ST_HWF_MULTIPLE_EVENTS);
 }
 
 /**
@@ -383,13 +366,18 @@ static void processAccEvents(void)
     uint8_t intSrcReg = 0;
     
     BSP_ACCELERO_Read_All_Int_Src_Register_Ext(ACCELERO_handle, &intSrcReg);
-    
+
     if((W2ST_CHECK_HW_FEATURE(W2ST_HWF_FREE_FALL)) ||
        (W2ST_CHECK_HW_FEATURE(W2ST_HWF_MULTIPLE_EVENTS)))
     {
         /* Check if the Free Fall interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_FF_IA){
         	AccEventSteps_Notify(ACC_FREE_FALL, GetStepSWPedometer());
+
+            if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_FREE_FALL)) {
+    			//Only for ST BLE Sensor Classic
+                AccEvent_Notifi(ACC_FREE_FALL);
+            }
         }
     }
     
@@ -399,6 +387,11 @@ static void processAccEvents(void)
         /* Check if the Double Tap interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_DOUBLE_TAP){
         	AccEventSteps_Notify(ACC_DOUBLE_TAP, GetStepSWPedometer());
+
+            if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_DOUBLE_TAP)) {
+    			//Only for ST BLE Sensor Classic
+                AccEvent_Notifi(ACC_DOUBLE_TAP);
+            }
         }
     }
     
@@ -408,6 +401,11 @@ static void processAccEvents(void)
         /* Check if the Single Tap interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_SINGLE_TAP){
         	AccEventSteps_Notify(ACC_SINGLE_TAP, GetStepSWPedometer());
+
+            if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_SINGLE_TAP)) {
+    			//Only for ST BLE Sensor Classic
+                AccEvent_Notifi(ACC_SINGLE_TAP);
+            }
         }
     }
     
@@ -418,8 +416,11 @@ static void processAccEvents(void)
         if(intSrcReg & ALL_INT_REG_6D_IA){
             AccEventType orientation = GetHWOrientation6D();
             AccEventSteps_Notify(orientation, GetStepSWPedometer());
-			//Only for ST BLE Sensor Classic
-            AccEvent_Notifi(orientation);
+
+            if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_6DORIENTATION)) {
+    			//Only for ST BLE Sensor Classic
+                AccEvent_Notifi(orientation);
+            }
         }
     }
 
@@ -427,6 +428,11 @@ static void processAccEvents(void)
         /* Check if the Wake Up interrupt flag is set */
         if(intSrcReg & ALL_INT_REG_WU_IA){
         	AccEventSteps_Notify(ACC_WAKE_UP, GetStepSWPedometer());
+
+            if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_WAKE_UP)) {
+    			//Only for ST BLE Sensor Classic
+                AccEvent_Notifi(ACC_WAKE_UP);
+            }
         }
     }
 }
@@ -442,7 +448,12 @@ static void processAccFifo(void)
             (W2ST_CHECK_HW_FEATURE(W2ST_HWF_MULTIPLE_EVENTS)))
         {
             if(lookForSteps()){
-            	AccEventSteps_Notifi(GetStepSWPedometer());
+            	AccEventSteps_Notify(ACC_PEDOMETER, GetStepSWPedometer());
+
+                if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_PEDOMETER)) {
+					//Only for ST BLE Sensor Classic
+                	AccEventSteps_Notifi(GetStepSWPedometer());
+				}
             }
         }
         
@@ -451,6 +462,11 @@ static void processAccFifo(void)
         {
             if(lookForTilt()){
             	AccEventSteps_Notify(ACC_TILT, GetStepSWPedometer());
+
+                if (W2ST_CHECK_HW_FEATURE(W2ST_HWF_TILT)) {
+					//Only for ST BLE Sensor Classic
+                	AccEvent_Notifi(ACC_TILT);
+				}
             }
         }
     }

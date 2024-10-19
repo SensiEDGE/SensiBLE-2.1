@@ -31,7 +31,7 @@ In the latest firmware version (SensiBLE-2.1-revC2-SW-OTA) redesigned accelerome
 - [SensiBLE-2.1-V3.1.3-OTA.bin](binary/SensiBLE-2.1-V3.1.3-OTA.bin) - firmware for downloading over BLE with "[ST BLE Sensor](https://www.st.com/en/embedded-software/stblesensor.html)".
 - [SensiBLE-2.1-V3.1.3-OTA-BT.bin](binary/SensiBLE-2.1-V3.1.3-OTA-BT.bin) - firmware for downloading with "[BlueNRG-1 ST-Link Utility](https://www.st.com/en/embedded-software/stsw-bnrg1stlink.html)"
 
-## Firmware Version 2.3.1
+## Firmware Version 3.1.3
 - Add Color Ambient Light BLE characteristic
 - Add calculating UV index, Color Ambient Light
 - Update Acc EVENT logic
